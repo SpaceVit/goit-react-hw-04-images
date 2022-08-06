@@ -1,52 +1,50 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import { VscSearch } from 'react-icons/vsc';
 import { toast } from 'react-toastify';
 
 import { Header, Button, Input, StyledForm } from './Searchbar.styled';
 import PropTypes from 'prop-types';
 
-export default class Searchbar extends Component {
-  state = {
-    value: '',
-  };
+export default function Searchbar({ onSubmit }) {
+  const [value, setValue] = useState('');
 
-  handleInputChange = e => {
+  const handleInputChange = e => {
     const { value } = e.target;
-    this.setState({ value });
+    setValue(value);
   };
 
-  handleSubmitForm = e => {
+  const handleSubmitForm = e => {
     e.preventDefault();
-    if (this.state.value.trim() === '') {
+
+    if (value.trim() === '') {
       toast.info('I didn`t catch what you are looking for');
       return;
     }
-    this.props.onSubmit(this.state.value);
-    this.resetForm();
+
+    onSubmit(value);
+    resetForm();
   };
 
-  resetForm = () => {
-    this.setState({ value: '' });
+  const resetForm = () => {
+    setValue('');
   };
 
-  render() {
-    return (
-      <Header>
-        <StyledForm onSubmit={this.handleSubmitForm}>
-          <Button type="submit">
-            <VscSearch size={13} />
-          </Button>
+  return (
+    <Header>
+      <StyledForm onSubmit={handleSubmitForm}>
+        <Button type="submit">
+          <VscSearch size={13} />
+        </Button>
 
-          <Input
-            type="text"
-            placeholder="Make a wish"
-            onChange={this.handleInputChange}
-            value={this.state.value}
-          />
-        </StyledForm>
-      </Header>
-    );
-  }
+        <Input
+          type="text"
+          placeholder="Make a wish"
+          onChange={handleInputChange}
+          value={value}
+        />
+      </StyledForm>
+    </Header>
+  );
 }
 
 Searchbar.propTypes = {

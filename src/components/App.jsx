@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { Title, TitleBox, BigPick } from './App.styled';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -10,106 +10,93 @@ import Button from './Button';
 import Loader from './Loader';
 import Modal from './Modal';
 
-export default class App extends Component {
-  state = {
-    query: '',
-    page: 1,
-    images: [],
-    largeImageURL: '',
-    tag: '',
-    showLoadMore: false,
-    status: 'idle',
-    openModal: false,
-  };
+export default function App() {
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [images, setImages] = useState([]);
+  const [largeImageURL, setLargeImageURL] = useState('');
+  const [tag, setTag] = useState('');
+  const [showLoadMore, setShowLoadMore] = useState(false);
+  const [status, setStatus] = useState('idle');
+  const [openModal, setOpenModal] = useState(false);
 
-  async componentDidUpdate(_, prevState) {
-    const perPage = 12;
-    const { page, query } = this.state;
+  useEffect(() => {
+    if (!query) return;
+    setStatus('pending');
 
-    if (query !== prevState.query || page !== prevState.page) {
+    const getImages = async (page, query) => {
       try {
-        this.setState({ status: 'pending' });
-
+        const perPage = 12;
         const { hits } = await fetchedImages(query, page, perPage);
-        const images = hits;
+        const pictures = hits;
 
-        if (images.length === 0) {
-          this.setState({ status: 'rejected', showLoadMore: false });
+        if (pictures.length === 0) {
+          setStatus('rejected');
+          setShowLoadMore(false);
         } else {
-          this.setState(prevState => ({
-            images: [...prevState.images, ...images],
-            status: 'resolved',
-            showLoadMore: true,
-          }));
+          setImages(prevState => [...prevState, ...pictures]);
+          setStatus('resolved');
+          setShowLoadMore(true);
         }
-
-        if (images.length < perPage) {
-          this.setState({ showLoadMore: false });
+        if (pictures.length < perPage) {
+          setShowLoadMore(false);
         }
       } catch (error) {
         alert(error);
       }
-    }
-  }
+    };
 
-  submitForm = async value => {
-    this.setState({ query: value, page: 1, images: [] });
+    getImages(page, query);
+  }, [query, page]);
+
+  const submitForm = async value => {
+    setQuery(value);
+    setPage(1);
+    setImages([]);
   };
 
-  loadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+  const loadMore = () => {
+    setPage(prevState => prevState + 1);
   };
 
-  togleModal = () => {
-    if (this.state.openModal) {
-      this.setState({ openModal: false });
+  const togleModal = () => {
+    if (openModal) {
+      setOpenModal(false);
     } else {
-      this.setState({ openModal: true });
+      setOpenModal(true);
     }
   };
 
-  openBigPick = (largeImageURL, tag) => {
-    this.setState({ largeImageURL, tag });
-    this.togleModal();
+  const openBigPick = (largeImageURL, tag) => {
+    setLargeImageURL(largeImageURL);
+    setTag(tag);
+    togleModal();
   };
 
-  render() {
-    const {
-      status,
-      images,
-      query,
-      showLoadMore,
-      openModal,
-      largeImageURL,
-      tag,
-    } = this.state;
-    return (
-      <div>
-        <ToastContainer autoClose={3000} closeOnClick={true} />
-        <Searchbar onSubmit={this.submitForm} />
-        {status === 'idle' && (
-          <TitleBox>
-            <Title>What are you looking for?</Title>
-          </TitleBox>
-        )}
-        {status === 'pending' && <Loader />}
-        {status === 'resolved' && (
-          <ImageGallery images={images} openBigPick={this.openBigPick} />
-        )}
-        {status === 'rejected' && (
-          <TitleBox>
-            <Title>I could`n find images with the name "{query}"</Title>
-          </TitleBox>
-        )}
-        {showLoadMore && <Button onLoadMore={this.loadMore} />}
-        {openModal && (
-          <Modal togleModal={this.togleModal}>
-            <BigPick src={largeImageURL} alt={tag} />
-          </Modal>
-        )}
-      </div>
-    );
-  }
+  return (
+    <div>
+      <ToastContainer autoClose={3000} closeOnClick={true} />
+      <Searchbar onSubmit={submitForm} />
+      {status === 'idle' && (
+        <TitleBox>
+          <Title>What are you looking for?</Title>
+        </TitleBox>
+      )}
+      {status === 'pending' && <Loader />}
+      {status === 'resolved' && (
+        <ImageGallery images={images} openBigPick={openBigPick} />
+      )}
+      {status === 'rejected' && (
+        <TitleBox>
+          <Title>I could`n find images with the name "{query}"</Title>
+        </TitleBox>
+      )}
+      {showLoadMore && <Button onLoadMore={loadMore} />}
+      {openModal && (
+        <Modal togleModal={togleModal}>
+          <BigPick src={largeImageURL} alt={tag} />
+        </Modal>
+      )}
+    </div>
+  );
 }

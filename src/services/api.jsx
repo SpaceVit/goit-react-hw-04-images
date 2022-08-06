@@ -1,9 +1,3 @@
-// const response = await fetch(
-//   `${BASE_URL}?key=${API_KEY}&q=${query}&page=${page}&${PARAMS}&per_page=${PER_PAGE}`
-// );
-// const data = await response.json();
-// const images = data.hits;
-
 import axios from 'axios';
 
 const BASE_URL = 'https://pixabay.com/api/';
